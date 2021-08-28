@@ -1,0 +1,43 @@
+name: 'Build Model Manifest'
+description: 'Generates a package model from partials and a manifest of git commit hashes of that model.'
+inputs:
+  common-model-path:
+    description: 'Path to baseline model file.'
+    required: true
+    default: ./baseline-model.json
+  custom-model-path:
+    description: 'Path to customization model file.'
+    required: true
+    default: ./custom-model.json
+  manifest-path:
+    description: 'Path to manifest file to be generated.'
+    required: true
+    default: ./manifest.txt
+outputs:
+  model:
+    description: "Generated model of merged partials"
+    value: ${{ steps.random-number-generator.outputs.model-path }}
+  manifest:
+    description: "Generated manifest of package model"
+    value: ${{ steps.random-number-generator.outputs.manifest-path }}
+runs:
+  using: "composite"
+  steps:
+    - id: generate-model
+      name: Generate Model
+      run: |
+        jq -s '.[0] * .[1]' ${{ inputs.common-model-path }} ${{ inputs.custom-model-path }} > /tmp/model.json
+        echo "Generated model:"
+        cat /tmp/model.json      
+        run: echo "::set-output name=model-path::/tmp/model.json"    
+      shell: bash
+    - id: generate-manifest
+      name: Generate Manifest
+      run: |
+        [ -e ${{ inputs.manifest-path }} ] && rm ${{ inputs.manifest-path }}
+        cat /tmp/model.json | ${{ github.action_path }}/build-manifest.sh ./manifest-raw.txt /tmp/manifest
+        sort ./manifest-raw.txt > ${{ inputs.manifest-path }}
+        rm ./manifest-raw.txt
+        echo "Generated manifest:"
+        cat ${{ inputs.manifest-path }}
+      shell: bash
