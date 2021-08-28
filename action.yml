@@ -9,27 +9,23 @@ inputs:
     description: 'Path to customization model file.'
     required: true
     default: ./custom-model.json
-  manifest-path:
+  generated-manifest-path:
     description: 'Path to manifest file to be generated.'
     required: true
-    default: ./manifest.txt
-outputs:
-  model:
-    description: "Generated model of merged partials"
-    value: ${{ steps.random-number-generator.outputs.model-path }}
-  manifest:
-    description: "Generated manifest of package model"
-    value: ${{ steps.random-number-generator.outputs.manifest-path }}
+    default: ./generated-manifest.txt
+  generated-model-path:
+    description: 'Path to model file to be generated.'
+    required: true
+    default: /tmp/generated-model.json
 runs:
   using: "composite"
   steps:
     - id: generate-model
       name: Generate Model
       run: |
-        jq -s '.[0] * .[1]' ${{ inputs.common-model-path }} ${{ inputs.custom-model-path }} > /tmp/model.json
+        jq -s '.[0] * .[1]' ${{ inputs.common-model-path }} ${{ inputs.custom-model-path }} > ${{ inputs.generated-model-path }}
         echo "Generated model:"
-        cat /tmp/model.json      
-        run: echo "::set-output name=model-path::/tmp/model.json"    
+        cat ${{ inputs.generated-model-path }}
       shell: bash
     - id: generate-manifest
       name: Generate Manifest
