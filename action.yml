@@ -30,10 +30,10 @@ runs:
     - id: generate-manifest
       name: Generate Manifest
       run: |
-        [ -e ${{ inputs.manifest-path }} ] && rm ${{ inputs.manifest-path }}
-        cat /tmp/model.json | ${{ github.action_path }}/build-manifest.sh ./manifest-raw.txt /tmp/manifest
-        sort ./manifest-raw.txt > ${{ inputs.manifest-path }}
+        [ -e ${{ inputs.generated-manifest-path }} ] && rm ${{ inputs.generated-manifest-path }}
+        cat ${{ inputs.generated-model-path }} | ${{ github.action_path }}/build-manifest.sh ./manifest-raw.txt /tmp/manifest
+        sort ./manifest-raw.txt > ${{ inputs.generated-manifest-path }}
         rm ./manifest-raw.txt
         echo "Generated manifest:"
-        cat ${{ inputs.manifest-path }}
+        cat ${{ inputs.generated-manifest-path }}
       shell: bash
