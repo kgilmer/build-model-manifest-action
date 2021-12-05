@@ -46,54 +46,6 @@ checkout() {
     cd - > /dev/null 2>&1  || exit
 }
 
-sanitize_git() {
-    if [ -d  ".github" ]; then 
-        rm -Rf .github 
-        echo "Removed $(pwd).github directory before building to appease debuild."
-    fi
-    if [ -d  ".git" ]; then 
-        rm -Rf .git
-        echo "Removed $(pwd).git directory before building to appease debuild."
-    fi
-}
-
-# Stage package source in prep to build 
-stage_source() {
-    print_banner "Preparing source for ${packageModel[name]}"
-    cd "$BUILD_DIR/${packageModel[name]}"  || exit
-    full_version=$(dpkg-parsechangelog --show-field Version)
-    debian_version="${full_version%-*}"
-    cd "$BUILD_DIR" || exit
-    
-    if [ "${packageModel[upstreamTarball]}" != "" ]; then
-        echo "Downloading source from ${packageModel[upstreamTarball]}..."
-        wget ${packageModel[upstreamTarball]} -O ${packageModel[name]}/../${packageModel[name]}\_$debian_version.orig.tar.gz
-    else
-        echo "Generating source tarball from git repo."
-        tar cfzv ${packageModel[name]}\_${debian_version}.orig.tar.gz --exclude .git\* --exclude debian ${packageModel[name]}/../${packageModel[name]}
-    fi
-}
-
-# Build
-build_src_package() {
-    print_banner "Building source package ${packageModel[name]}"
-    cd "$BUILD_DIR/${packageModel[name]}" || exit
-    
-    sanitize_git    
-    sudo apt build-dep -y .
-    debuild -S -sa
-    cd "$BUILD_DIR" || exit
-}
-
-build_bin_package() {
-    print_banner "Building binary package ${packageModel[name]}"
-    cd "$BUILD_DIR/${packageModel[name]}"  || exit
-    
-    sanitize_git
-    debuild -sa -b
-    cd "$BUILD_DIR" || exit
-}
-
 cache_model() {    
     PACKAGE_MODEL_FILE="$BUILD_DIR/pkg-model.json"
 
@@ -174,7 +126,6 @@ handle_package() {
 
 # Main
 set -e
-# set -x
 
 env_check
 if [ ! -d $BUILD_DIR ]; then
